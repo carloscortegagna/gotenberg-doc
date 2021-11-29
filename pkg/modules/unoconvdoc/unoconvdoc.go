@@ -115,7 +115,7 @@ func (mod Unoconvdoc) Unoconvdoc() (API, error) {
 // to this method may increase CPU and memory usage drastically. In such a
 // scenario, the given context may also be done before the end of the
 // conversion.
-func (mod Unoconv) DOC(ctx context.Context, logger *zap.Logger, inputPath, outputPath string, options Options) error {
+func (mod Unoconvdoc) DOC(ctx context.Context, logger *zap.Logger, inputPath, outputPath string, options Options) error {
 	port, err := func() (int, error) {
 		listener, err := net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
