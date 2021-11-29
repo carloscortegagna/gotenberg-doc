@@ -1,15 +1,5 @@
 package unoconvdoc
 
-import (
-	"context"
-	"os"
-	"reflect"
-	"testing"
-
-	"github.com/gotenberg/gotenberg/v7/pkg/gotenberg"
-	"go.uber.org/zap"
-)
-
 // func TestUnoconv_Descriptor(t *testing.T) {
 // 	descriptor := Unoconv{}.Descriptor()
 
