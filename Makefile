@@ -3,7 +3,7 @@ help: ## Show the help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: it
-it: build build-tests ## Initialize the development environment
+it: build ## Initialize the development environment
 
 GOLANG_VERSION=1.17
 APP_NAME=gotenberg-doc
