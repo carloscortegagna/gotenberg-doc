@@ -6,11 +6,11 @@ help: ## Show the help
 it: build build-tests ## Initialize the development environment
 
 GOLANG_VERSION=1.17
-APP_NAME=app
-APP_VERSION=snapshot
-APP_AUTHOR=app-author
-APP_REPOSITORY=https://my.app.git
-DOCKER_REPOSITORY=app
+APP_NAME=gotenberg-doc
+APP_VERSION=0.1
+APP_AUTHOR=carlo
+APP_REPOSITORY=https://github.com:carloscortegagna/gotenberg-doc.git
+DOCKER_REPOSITORY=carloscortegagna
 GOLANGCI_LINT_VERSION=v1.42.0 # See https://github.com/golangci/golangci-lint/releases.
 
 .PHONY: build

@@ -1,6 +1,4 @@
-module github.com/gotenberg/gotenberg-template-repository
-
-// TODO: change module name.
+module github.com/carloscortegagna/gotenberg-doc
 
 go 1.17
 
