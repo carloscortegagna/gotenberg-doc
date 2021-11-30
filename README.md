@@ -1,5 +1,5 @@
 > Use this GitHub template repository for your custom modules and Gotenberg's Docker image variants.
-> 
+>
 > Want to share your work? Open a PR to the [awesome list](https://github.com/gotenberg/awesome-gotenberg)! 🚀
 
 ## Quick Start

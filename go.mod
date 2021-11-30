@@ -1,4 +1,4 @@
-module github.com/carloscortegagna/gotenberg-doc
+module github.com/carloscortegagna/gotenberg-unoconvformat
 
 go 1.17
 

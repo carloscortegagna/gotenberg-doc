@@ -1,4 +1,4 @@
-package unoconvdoc
+package unoconvformat
 
 import (
 	"errors"
@@ -9,11 +9,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// convertRoute returns an api.Route which can convert LibreOffice documents to doc and docx.
+// convertRoute returns an api.Route which can convert documents with LibreOffice
 func convertRoute(uno API) api.Route {
 	return api.Route{
 		Method:      http.MethodPost,
-		Path:        "/forms/libreoffice/convert-to-doc",
+		Path:        "/forms/unoconvformat/convert",
 		IsMultipart: true,
 		Handler: func(c echo.Context) error {
 			ctx := c.Get("context").(*api.Context)
@@ -21,43 +21,50 @@ func convertRoute(uno API) api.Route {
 			// Let's get the data from the form and validate them.
 			var (
 				inputPaths       []string
-				landscape        bool
 				nativePageRanges string
+				format           string
 			)
 
 			err := ctx.FormData().
 				MandatoryPaths(uno.Extensions(), &inputPaths).
-				Bool("landscape", &landscape, false).
 				String("nativePageRanges", &nativePageRanges, "").
+				MandatoryString("format", &format).
 				Validate()
 
 			if err != nil {
 				return fmt.Errorf("validate form data: %w", err)
 			}
 
-			// Alright, let's convert each document to DOC.
+			// Alright, let's convert each document.
 
 			outputPaths := make([]string, len(inputPaths))
 
 			for i, inputPath := range inputPaths {
-				outputPaths[i] = ctx.GeneratePath(".doc")
+				outputPaths[i] = ctx.GeneratePath("." + format)
 
 				options := Options{
-					Landscape:  landscape,
 					PageRanges: nativePageRanges,
+					Format:     format,
 				}
 
-				err = uno.DOC(ctx, ctx.Log(), inputPath, outputPaths[i], options)
+				err = uno.Convert(ctx, ctx.Log(), inputPath, outputPaths[i], options)
 
 				if err != nil {
 					if errors.Is(err, ErrMalformedPageRanges) {
 						return api.WrapError(
-							fmt.Errorf("convert to DOC: %w", err),
+							fmt.Errorf("convert: %w", err),
 							api.NewSentinelHTTPError(http.StatusBadRequest, fmt.Sprintf("Malformed page ranges '%s' (nativePageRanges)", options.PageRanges)),
 						)
 					}
 
-					return fmt.Errorf("convert to DOC: %w", err)
+					if errors.Is(err, ErrInvalidFormat) {
+						return api.WrapError(
+							fmt.Errorf("convert: %w", err),
+							api.NewSentinelHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format '%s' (format)", options.Format)),
+						)
+					}
+
+					return fmt.Errorf("convert: %w", err)
 				}
 			}
 

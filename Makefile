@@ -6,10 +6,10 @@ help: ## Show the help
 it: build ## Initialize the development environment
 
 GOLANG_VERSION=1.17
-APP_NAME=gotenberg-doc
+APP_NAME=gotenberg-unoconvformat
 APP_VERSION=0.1
 APP_AUTHOR=carlo
-APP_REPOSITORY=https://github.com:carloscortegagna/gotenberg-doc.git
+APP_REPOSITORY=https://github.com:carloscortegagna/gotenberg-unoconvformat.git
 DOCKER_REPOSITORY=carloscortegagna
 GOLANGCI_LINT_VERSION=v1.42.0 # See https://github.com/golangci/golangci-lint/releases.
 

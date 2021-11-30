@@ -1,4 +1,4 @@
-package unoconvdoc
+package unoconvformat
 
 // func TestUnoconv_Descriptor(t *testing.T) {
 // 	descriptor := Unoconv{}.Descriptor()
