@@ -11,19 +11,20 @@ import (
 	"sync"
 
 	"github.com/gotenberg/gotenberg/v7/pkg/gotenberg"
+	"github.com/gotenberg/gotenberg/v7/pkg/modules/api"
 	"go.uber.org/zap"
 )
 
 func init() {
-	gotenberg.MustRegisterModule(Unoconvdoc{})
+	gotenberg.MustRegisterModule(UnoconvDoc{})
 }
 
 // ErrMalformedPageRanges happens if the page ranges option cannot be
 // interpreted by LibreOffice.
 var ErrMalformedPageRanges = errors.New("page ranges are malformed")
 
-// Unoconvdoc is a module which provides an API to interact with unoconv.
-type Unoconvdoc struct {
+// UnoconvDoc is a module which provides an API to interact with unoconv.
+type UnoconvDoc struct {
 	binPath string
 }
 
@@ -54,21 +55,45 @@ type API interface {
 //		provider, _ := ctx.Module(new(unoconv.Provider))
 //		uno, _      := provider.(unoconv.Provider).Unoconv()
 //	}
-type Provider interface {
-	Unoconvdoc() (API, error)
-}
+// type Provider interface {
+// 	UnoconvDoc() (API, error)
+// }
 
 // Descriptor returns a Unoconv's module descriptor.
-func (Unoconvdoc) Descriptor() gotenberg.ModuleDescriptor {
+func (UnoconvDoc) Descriptor() gotenberg.ModuleDescriptor {
 	return gotenberg.ModuleDescriptor{
 		ID:  "unoconvdoc",
-		New: func() gotenberg.Module { return new(Unoconvdoc) },
+		New: func() gotenberg.Module { return new(UnoconvDoc) },
 	}
 }
 
-// Provision sets the module properties. It returns an error if the environment
-// variable UNOCONV_BIN_PATH is not set.
-func (mod *Unoconvdoc) Provision(_ *gotenberg.Context) error {
+// Provision sets the module properties.
+// It returns an error if the environment variable UNOCONV_BIN_PATH is not set.
+func (mod *UnoconvDoc) Provision(ctx *gotenberg.Context) error {
+	// provider, err := ctx.Module(new(Provider))
+	// if err != nil {
+	// 	return fmt.Errorf("get UnoconvDoc provider: %w", err)
+	// }
+
+	// uno, err := provider.(Provider).UnoconvDoc()
+	// if err != nil {
+	// 	return fmt.Errorf("get UnoconvDoc API: %w", err)
+	// }
+
+	// mod.unoconv = uno
+
+	// provider, err = ctx.Module(new(gotenberg.PDFEngineProvider))
+	// if err != nil {
+	// 	return fmt.Errorf("get PDF engine provider: %w", err)
+	// }
+
+	// engine, err := provider.(gotenberg.PDFEngineProvider).PDFEngine()
+	// if err != nil {
+	// 	return fmt.Errorf("get PDF engine: %w", err)
+	// }
+
+	// mod.engine = engine
+
 	binPath, ok := os.LookupEnv("UNOCONV_BIN_PATH")
 	if !ok {
 		return errors.New("UNOCONV_BIN_PATH environment variable is not set")
@@ -80,7 +105,7 @@ func (mod *Unoconvdoc) Provision(_ *gotenberg.Context) error {
 }
 
 // Validate validates the module properties.
-func (mod Unoconvdoc) Validate() error {
+func (mod UnoconvDoc) Validate() error {
 	_, err := os.Stat(mod.binPath)
 	if os.IsNotExist(err) {
 		return fmt.Errorf("unoconv binary path does not exist: %w", err)
@@ -90,7 +115,7 @@ func (mod Unoconvdoc) Validate() error {
 }
 
 // Metrics returns the metrics.
-func (mod Unoconvdoc) Metrics() ([]gotenberg.Metric, error) {
+func (mod UnoconvDoc) Metrics() ([]gotenberg.Metric, error) {
 	return []gotenberg.Metric{
 		{
 			Name:        "unoconvdoc_active_instances_count",
@@ -106,7 +131,7 @@ func (mod Unoconvdoc) Metrics() ([]gotenberg.Metric, error) {
 }
 
 // Unoconvdoc returns an API for interacting with unoconv.
-func (mod Unoconvdoc) Unoconvdoc() (API, error) {
+func (mod UnoconvDoc) UnoconvDoc() (API, error) {
 	return mod, nil
 }
 
@@ -115,7 +140,7 @@ func (mod Unoconvdoc) Unoconvdoc() (API, error) {
 // to this method may increase CPU and memory usage drastically. In such a
 // scenario, the given context may also be done before the end of the
 // conversion.
-func (mod Unoconvdoc) DOC(ctx context.Context, logger *zap.Logger, inputPath, outputPath string, options Options) error {
+func (mod UnoconvDoc) DOC(ctx context.Context, logger *zap.Logger, inputPath, outputPath string, options Options) error {
 	port, err := func() (int, error) {
 		listener, err := net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
@@ -215,11 +240,11 @@ func (mod Unoconvdoc) DOC(ctx context.Context, logger *zap.Logger, inputPath, ou
 	// On the second scenario, LibreOffice might not had time to remove some of
 	// its temporary files, as it has been killed without warning. The garbage
 	// collector will delete them for us (if the module is loaded).
-	return fmt.Errorf("Unoconvdoc: %w", err)
+	return fmt.Errorf("unoconvdoc: %w", err)
 }
 
 // Extensions returns the file extensions available with unoconv.
-func (mod Unoconvdoc) Extensions() []string {
+func (mod UnoconvDoc) Extensions() []string {
 	return []string{
 		".bib",
 		".doc",
@@ -300,6 +325,13 @@ func (mod Unoconvdoc) Extensions() []string {
 	}
 }
 
+// Routes returns the HTTP routes.
+func (mod UnoconvDoc) Routes() ([]api.Route, error) {
+	return []api.Route{
+		convertRoute(mod),
+	}, nil
+}
+
 var (
 	activeInstancesCount   float64
 	activeInstancesCountMu sync.RWMutex
@@ -307,10 +339,11 @@ var (
 
 // Interface guards.
 var (
-	_ gotenberg.Module          = (*Unoconvdoc)(nil)
-	_ gotenberg.Provisioner     = (*Unoconvdoc)(nil)
-	_ gotenberg.Validator       = (*Unoconvdoc)(nil)
-	_ gotenberg.MetricsProvider = (*Unoconvdoc)(nil)
-	_ API                       = (*Unoconvdoc)(nil)
-	_ Provider                  = (*Unoconvdoc)(nil)
+	_ gotenberg.Module          = (*UnoconvDoc)(nil)
+	_ gotenberg.Provisioner     = (*UnoconvDoc)(nil)
+	_ gotenberg.Validator       = (*UnoconvDoc)(nil)
+	_ gotenberg.MetricsProvider = (*UnoconvDoc)(nil)
+	_ API                       = (*UnoconvDoc)(nil)
+	_ api.Router                = (*UnoconvDoc)(nil)
+	// _ Provider                  = (*UnoconvDoc)(nil)
 )
